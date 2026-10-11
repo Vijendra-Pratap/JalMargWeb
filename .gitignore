@@ -29,6 +29,7 @@ backups/
 *.dump
 *.backup
 *.rdb
+data/
 backend/data/*.db
 backend/data/*.trace.db
 backend/data/*.mv.db

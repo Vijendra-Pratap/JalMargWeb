@@ -53,7 +53,7 @@ public class TwinSnapshot {
     private int activeIncidentCount;
 
     @Column(name = "rainfall_6h_mm")
-    private double rainfall6hMm;
+    private Double rainfall6hMm = 0.0;
 
     @Column(nullable = false, length = 64)
     private String modelVersion;
@@ -78,7 +78,7 @@ public class TwinSnapshot {
     public TwinSnapshot(TwinSnapshotType snapshotType, MunicipalZone zone, String zoneName,
                         Instant snapshotTimestamp, int overallRiskScore, RiskLevel riskLevel,
                         RiskStatus riskStatus, int activeReportCount, int activeIncidentCount,
-                        double rainfall6hMm, String modelVersion, String contributingEvidenceJson,
+                        Double rainfall6hMm, String modelVersion, String contributingEvidenceJson,
                         String missingDataIndicatorsJson, String provenanceSummary,
                         String uncertaintyDisclaimer, String immutableHash) {
         this.snapshotType = snapshotType;
@@ -91,7 +91,7 @@ public class TwinSnapshot {
         this.riskStatus = riskStatus;
         this.activeReportCount = activeReportCount;
         this.activeIncidentCount = activeIncidentCount;
-        this.rainfall6hMm = rainfall6hMm;
+        this.rainfall6hMm = rainfall6hMm != null ? rainfall6hMm : 0.0;
         this.modelVersion = modelVersion;
         this.contributingEvidenceJson = contributingEvidenceJson;
         this.missingDataIndicatorsJson = missingDataIndicatorsJson;
@@ -133,8 +133,8 @@ public class TwinSnapshot {
     public int getActiveIncidentCount() { return activeIncidentCount; }
     public void setActiveIncidentCount(int activeIncidentCount) { this.activeIncidentCount = activeIncidentCount; }
 
-    public double getRainfall6hMm() { return rainfall6hMm; }
-    public void setRainfall6hMm(double rainfall6hMm) { this.rainfall6hMm = rainfall6hMm; }
+    public Double getRainfall6hMm() { return rainfall6hMm != null ? rainfall6hMm : 0.0; }
+    public void setRainfall6hMm(Double rainfall6hMm) { this.rainfall6hMm = rainfall6hMm != null ? rainfall6hMm : 0.0; }
 
     public String getModelVersion() { return modelVersion; }
     public void setModelVersion(String modelVersion) { this.modelVersion = modelVersion; }

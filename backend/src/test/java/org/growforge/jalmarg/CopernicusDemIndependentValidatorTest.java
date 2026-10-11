@@ -23,7 +23,11 @@ class CopernicusDemIndependentValidatorTest {
 
     @BeforeEach
     void setUp() {
-        rasterFile = new File("D:/jalmarg/jalmarg/backend/data/dem/Copernicus_DSM_COG_10_N28_00_E077_00_DEM.tif");
+        File candidate = new File("data/dem/Copernicus_DSM_COG_10_N28_00_E077_00_DEM.tif");
+        if (!candidate.exists()) {
+            candidate = new File("backend/data/dem/Copernicus_DSM_COG_10_N28_00_E077_00_DEM.tif");
+        }
+        rasterFile = candidate;
         demService = new CopernicusDemService(true, rasterFile.getAbsolutePath());
     }
 

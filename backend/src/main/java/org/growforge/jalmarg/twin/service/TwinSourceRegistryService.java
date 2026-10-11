@@ -26,6 +26,13 @@ public class TwinSourceRegistryService {
     @PostConstruct
     @Transactional
     public void seedDefaultSources() {
+        repo.findBySourceCode("SRC_DELHI_DRAINAGE_STATUS").ifPresent(src -> {
+            if (src.getSourceClassification() != SourceClassification.UNAVAILABLE) {
+                src.setSourceClassification(SourceClassification.UNAVAILABLE);
+                repo.save(src);
+            }
+        });
+
         if (repo.count() > 0) return;
 
         List<DataSourceRegistry> defaults = List.of(
