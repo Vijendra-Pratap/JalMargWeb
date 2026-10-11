@@ -52,6 +52,7 @@ public class TwinSnapshot {
     private int activeReportCount;
     private int activeIncidentCount;
 
+    @Column(name = "rainfall_6h_mm")
     private double rainfall6hMm;
 
     @Column(nullable = false, length = 64)
