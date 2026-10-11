@@ -29,8 +29,9 @@ backups/
 *.dump
 *.backup
 *.rdb
-*.bak
-backend/data/
+backend/data/*.db
+backend/data/*.trace.db
+backend/data/*.mv.db
 
 # ------------------------------------------------------------------------------
 # 3. Java / Maven Build Artifacts

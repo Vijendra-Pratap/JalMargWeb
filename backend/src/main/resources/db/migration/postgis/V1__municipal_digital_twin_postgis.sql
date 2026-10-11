@@ -6,6 +6,88 @@
 -- 1. Enable PostGIS extension (PostgreSQL Superuser required)
 CREATE EXTENSION IF NOT EXISTS postgis;
 
+-- 1.1 Core Citizen Reporting & Risk Baseline Tables
+CREATE TABLE IF NOT EXISTS hotspots (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    area VARCHAR(255),
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    total_reports INTEGER NOT NULL DEFAULT 0,
+    first_seen TIMESTAMP WITH TIME ZONE,
+    last_seen TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE IF NOT EXISTS reports (
+    id BIGSERIAL PRIMARY KEY,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    location_name VARCHAR(255),
+    hotspot_id BIGINT REFERENCES hotspots(id) ON DELETE SET NULL,
+    photo_key VARCHAR(255),
+    citizen_depth_level VARCHAR(64),
+    depth_ft DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    severity VARCHAR(64),
+    depth_source VARCHAR(64),
+    walk_safe BOOLEAN NOT NULL DEFAULT FALSE,
+    bike_safe BOOLEAN NOT NULL DEFAULT FALSE,
+    car_safe BOOLEAN NOT NULL DEFAULT FALSE,
+    ai_summary VARCHAR(1000),
+    ai_summary_hi VARCHAR(1000),
+    ai_confidence DOUBLE PRECISION,
+    note VARCHAR(500),
+    confirmations INTEGER NOT NULL DEFAULT 0,
+    status VARCHAR(64) NOT NULL DEFAULT 'ACTIVE',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    last_confirmed_at TIMESTAMP WITH TIME ZONE,
+    cleared_at TIMESTAMP WITH TIME ZONE
+);
+CREATE INDEX IF NOT EXISTS idx_report_status ON reports(status);
+CREATE INDEX IF NOT EXISTS idx_report_hotspot ON reports(hotspot_id);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    email VARCHAR(255) NOT NULL,
+    label VARCHAR(255),
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    radius_km DOUBLE PRECISION NOT NULL DEFAULT 3.0,
+    lang VARCHAR(32) NOT NULL DEFAULT 'en',
+    sns_subscribed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    last_alert_at TIMESTAMP WITH TIME ZONE,
+    last_alert_signature VARCHAR(500)
+);
+
+CREATE TABLE IF NOT EXISTS flood_risk_assessments (
+    id BIGSERIAL PRIMARY KEY,
+    hotspot_id BIGINT,
+    hotspot_name VARCHAR(200),
+    area VARCHAR(100),
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    risk_level VARCHAR(20) NOT NULL,
+    risk_score INTEGER NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    rainfall_next_6h_mm DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    max_hourly_mm DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    rain_level VARCHAR(30),
+    active_report_count INTEGER NOT NULL DEFAULT 0,
+    max_observed_depth_ft DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    historical_proneness INTEGER NOT NULL DEFAULT 0,
+    confidence DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    data_quality VARCHAR(30),
+    summary_en VARCHAR(1000),
+    summary_hi VARCHAR(1000),
+    factor_breakdown VARCHAR(2000),
+    assessed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_risk_hotspot ON flood_risk_assessments(hotspot_id);
+CREATE INDEX IF NOT EXISTS idx_risk_level ON flood_risk_assessments(risk_level);
+CREATE INDEX IF NOT EXISTS idx_risk_assessed_at ON flood_risk_assessments(assessed_at);
+
 -- 2. Data Source Registry
 CREATE TABLE IF NOT EXISTS twin_data_source_registry (
     id BIGSERIAL PRIMARY KEY,

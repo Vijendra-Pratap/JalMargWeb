@@ -22,8 +22,28 @@ public class FlywayIntegrityAuditTest {
     public void auditFlywaySchemaHistoryAndValidation() throws Exception {
         System.out.println("=== FLYWAY INTEGRITY AUDIT (READ-ONLY) ===");
 
+        String envUrl = System.getenv("DB_URL");
+        if (envUrl == null || envUrl.isBlank()) {
+            envUrl = System.getProperty("DB_URL");
+        }
+        String jdbcUrl = (envUrl != null && !envUrl.isBlank()) ? envUrl : JDBC_URL;
+
+        String envUser = System.getenv("DB_USER");
+        if (envUser == null || envUser.isBlank()) {
+            envUser = System.getProperty("DB_USER");
+        }
+        String user = (envUser != null && !envUser.isBlank()) ? envUser : USER;
+
+        String envPass = System.getenv("DB_PASSWORD");
+        if (envPass == null || envPass.isBlank()) {
+            envPass = System.getProperty("DB_PASSWORD");
+        }
+        String pass = (envPass != null && !envPass.isBlank()) ? envPass : PASS;
+
+        boolean isCi = "true".equalsIgnoreCase(System.getenv("CI")) || "true".equalsIgnoreCase(System.getenv("GITHUB_ACTIONS"));
+
         // 1. Direct JDBC inspection of database & port
-        try (Connection conn = DriverManager.getConnection(JDBC_URL, USER, PASS);
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, user, pass);
              Statement stmt = conn.createStatement()) {
 
             ResultSet rs = stmt.executeQuery("SELECT inet_server_port(), current_database(), postgis_full_version()");
@@ -34,10 +54,16 @@ public class FlywayIntegrityAuditTest {
                 System.out.println("Target DB: " + dbName);
                 System.out.println("PostGIS Version: " + rs.getString(3));
 
-                // Strict port isolation and identity assertions
-                org.junit.jupiter.api.Assertions.assertEquals(5433, port, "Must connect strictly to JalMarg port 5433");
-                org.junit.jupiter.api.Assertions.assertNotEquals(5432, port, "Must NEVER connect to CarSync port 5432");
-                org.junit.jupiter.api.Assertions.assertEquals("jalmarg_twin", dbName, "Must connect to jalmarg_twin");
+                if (isCi) {
+                    System.out.println("Running in CI environment: verifying ephemeral test container identity");
+                    org.junit.jupiter.api.Assertions.assertEquals("jalmarg_ci_test", dbName, "CI must connect to isolated jalmarg_ci_test database");
+                    org.junit.jupiter.api.Assertions.assertEquals(5432, port, "CI PostgreSQL service container must be on port 5432");
+                } else {
+                    // Strict local port isolation and identity assertions
+                    org.junit.jupiter.api.Assertions.assertEquals(5433, port, "Must connect strictly to JalMarg port 5433");
+                    org.junit.jupiter.api.Assertions.assertNotEquals(5432, port, "Must NEVER connect to CarSync port 5432");
+                    org.junit.jupiter.api.Assertions.assertEquals("jalmarg_twin", dbName, "Must connect to jalmarg_twin");
+                }
             }
 
             // Inspect flyway_schema_history rows
@@ -72,7 +98,7 @@ public class FlywayIntegrityAuditTest {
 
         // 2. Flyway programmatic execution and validation
         Flyway flyway = Flyway.configure()
-                .dataSource(JDBC_URL, USER, PASS)
+                .dataSource(jdbcUrl, user, pass)
                 .locations("classpath:db/migration/postgis")
                 .baselineOnMigrate(true)
                 .load();

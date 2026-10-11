@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const ROOT_DIR = 'D:/jalmarg/jalmarg';
+const ROOT_DIR = process.env.PROJECT_ROOT || process.cwd();
 
 // Parse .gitignore rules
 const gitignoreContent = fs.readFileSync(path.join(ROOT_DIR, '.gitignore'), 'utf8');
